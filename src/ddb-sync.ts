@@ -9,8 +9,12 @@ const exportS3Prefix = `ddb-export-${now}`;
 (async () => {
     try {
         const tableName = await getUserInput('Table to sync:', 'table-name');
+
+        const secondaryIndexes = (await getUserInput('Secondary indexes to add (seperate indexes with comma):', ''))?.split(',');
+
         const sourceEnvironment = await getEnvironment('Source environment:');
         const sourceProfile = await getUserInput('Source AWS profile:', 'prod');
+
         const targetEnvironment = await getEnvironment('Target environment:');
         const targetProfile = await getUserInput('Target AWS profile:', 'local');
 
@@ -32,9 +36,28 @@ const exportS3Prefix = `ddb-export-${now}`;
             };
             const exportCommand = new ExportTableToPointInTimeCommand(exportParams);
 
+            // TODO: handle wait time until export is successful by checking ExportDescription.ExportStatus is "COMPLETED"
             await sourceDynamoDBClient.send(exportCommand)
             console.log(`Table: ${sourceTableName} exported successfully ✅`);
         };
+
+        // Generate secondary indexes to create during import
+        const GlobalSecondaryIndexes = secondaryIndexes?.map((secondaryIndex) => ({
+            IndexName: secondaryIndex,
+            KeySchema: [
+                { AttributeName: `${secondaryIndex}PK`, KeyType: "HASH" },
+                { AttributeName: `${secondaryIndex}SK`, KeyType: "RANGE" }
+            ],
+            Projection: {
+                ProjectionType: "ALL"
+            },
+            ProvisionedThroughput: {
+                ReadCapacityUnits: 5,
+                WriteCapacityUnits: 5
+            }
+        }));
+
+        const AttributeDefinitionsGlobalSecondaryIndexes = secondaryIndexes?.map((secondaryIndex) => ({ AttributeName: secondaryIndex, AttributeType: "S" }));
 
         // Import the DynamoDB table from S3
         const importTable = async () => {
@@ -46,13 +69,15 @@ const exportS3Prefix = `ddb-export-${now}`;
                 TableCreationParameters: {
                     TableName: targetTableName,
                     KeySchema: [
-                        { AttributeName: "pk", KeyType: "HASH" },
-                        { AttributeName: "sk", KeyType: "RANGE" }
+                        { AttributeName: "PK", KeyType: "HASH" },
+                        { AttributeName: "SK", KeyType: "RANGE" }
                     ],
                     AttributeDefinitions: [
-                        { AttributeName: "pk", AttributeType: "S" },
-                        { AttributeName: "sk", AttributeType: "S" }
+                        { AttributeName: "PK", AttributeType: "S" },
+                        { AttributeName: "SK", AttributeType: "S" },
+                        ...AttributeDefinitionsGlobalSecondaryIndexes
                     ],
+                    GlobalSecondaryIndexes,
                     ProvisionedThroughput: {
                         ReadCapacityUnits: 5,
                         WriteCapacityUnits: 5
