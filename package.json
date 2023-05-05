@@ -4,19 +4,21 @@
   "description": "Sync DDB tables from one AWS account to another",
   "main": "index.js",
   "scripts": {
-    "ddb:sync": "AWS_DEFAULT_REGION=eu-west-1 ts-node ./src/ddb-sync.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "ddb:sync": "AWS_DEFAULT_REGION=eu-west-1 ts-node ./src/ddb-sync.ts"
   },
   "author": "Raymond-Ly",
   "license": "ISC",
   "devDependencies": {
+    "@types/inquirer": "^9.0.3",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "inquirer": "7.3.3"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.327.0",
     "@aws-sdk/client-s3": "^3.327.0",
-    "@aws-sdk/credential-provider-ini": "^3.327.0",
+    "@aws-sdk/credential-providers": "^3.327.0",
+    "@aws-sdk/lib-dynamodb": "^3.327.0",
     "aws-sdk": "^2.1372.0"
   }
 }
