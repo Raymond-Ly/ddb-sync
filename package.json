@@ -4,7 +4,8 @@
   "description": "Sync DDB tables from one AWS account to another",
   "main": "index.js",
   "scripts": {
-    "ddb:sync": "AWS_DEFAULT_REGION=eu-west-1 ts-node ./src/ddb-sync.ts"
+    "ddb:sync": "AWS_DEFAULT_REGION=eu-west-1 ts-node ./src/ddb-sync.ts",
+    "ddb:sync:s3": "AWS_DEFAULT_REGION=eu-west-1 ts-node ./src/ddb-sync-s3.ts"
   },
   "author": "Raymond-Ly",
   "license": "ISC",
